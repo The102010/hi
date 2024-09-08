@@ -1,30 +1,65 @@
 <!DOCTYPE html>
-<html>
+<html lang="ar">
 <head>
-    <title>بوصلة بسيطة</title>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>QR Code Scanner</title>
+    <script src="https://unpkg.com/html5-qrcode/minified/html5-qrcode.min.js"></script>
     <style>
-        #compass {
-            transform-origin: center;
-            transition: transform 0.5s;
+        body {
+            font-family: Arial, sans-serif;
+            text-align: center;
+        }
+        #qr-reader {
+            width: 300px;
+            margin: 20px auto;
+        }
+        #result {
+            margin-top: 20px;
+        }
+        #link-button {
+            display: none;
+            margin-top: 10px;
         }
     </style>
 </head>
 <body>
-    <div>الشمال</div>
-    <img id="compass" src="compass.png" alt="Compass" style="width: 100px; height: 100px;">
+    <h1>Scan QR Code</h1>
+    <div id="qr-reader"></div>
+    <div id="result"></div>
+    <button id="link-button" onclick="openLink()">الانتقال إلى الرابط</button>
 
     <script>
-        if ('DeviceOrientationEvent' in window) {
-            window.addEventListener('deviceorientation', function(event) {
-                var alpha = event.alpha;
-                var compassImg = document.getElementById('compass');
-                if (compassImg) {
-                    // تحديث دوران الصورة بناءً على الزاوية
-                    compassImg.style.transform = `rotate(${-alpha}deg)`;
-                }
-            }, false);
-        } else {
-            alert('مستشعر الحركة غير متوفر في هذا الجهاز.');
+        function onScanSuccess(decodedText) {
+            // عرض الرابط للمستخدم
+            document.getElementById("result").innerHTML = "تم قراءة الرابط: " + decodedText;
+            document.getElementById("link-button").style.display = "inline";
+            document.getElementById("link-button").setAttribute("data-link", decodedText);
+        }
+
+        function onScanFailure(error) {
+            // في حالة الفشل في قراءة QR
+            console.warn(`QR error = ${error}`);
+        }
+
+        // بدء المسح باستخدام html5-qrcode
+        let html5QrCode = new Html5Qrcode("qr-reader");
+        html5QrCode.start(
+            { facingMode: "environment" }, 
+            {
+                fps: 10,    // سرعة المسح
+                qrbox: 250  // حجم مربع المسح
+            },
+            onScanSuccess,
+            onScanFailure
+        ).catch(err => {
+            console.error(`Error starting QR scanner: ${err}`);
+        });
+
+        // فتح الرابط عند الضغط على الزر
+        function openLink() {
+            let link = document.getElementById("link-button").getAttribute("data-link");
+            window.location.href = link;
         }
     </script>
 </body>
